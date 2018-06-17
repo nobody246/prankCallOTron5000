@@ -1,13 +1,9 @@
 (use alist-lib
      posix)
 (define moodc 0)
-(define mood 0)
 (define argc 0)
-(define filec 0)
 (define dat-file "/full/path/to/pcot.dat")
-(define params `((--show-folder . 0)
-		 (--iteration-count . 0)
-		 (--absolute-dir .
+(define params `((--absolute-dir .
    "/full/path/to/Characters/Red/")
 		 (--moodc . 0)
 		 (--greeting-threshold . 0)
@@ -17,7 +13,6 @@
 (define arg #f)
 (define used-file-names '())
 (define avail-file-names '())
-(define current-file-count 0)
 (define (usage)
   (print "..")
   (exit))
@@ -29,9 +24,7 @@
 
 (define (get-available-files)
   (let ((file-list (directory
-		    (string-append
-		     (alist-ref params '--absolute-dir)
-		     (number->string mood)))))
+		     (alist-ref params '--absolute-dir))))
     (for-each
      (lambda (x)
        (and-let*
@@ -41,25 +34,10 @@
 		   (car x)
 		   #f))
 	    (g (not (member x used-file-names))))
-	 (set! filec (add1 filec))
 	 (set! avail-file-names
 	   (append avail-file-names `(,x)))))
      file-list)))
 
-(define (check-mood)
-  (let ((i 0)
-	(cnt 0))
-    (for-each
-     (lambda (x)
-       (when (and
-	      (> cnt 0)
-	      (>= moodc (alist-ref params x)))
-	 (set! i (add1 i)))
-       (when (> i (length (cddddr params)))
-	 (set! i 0))
-       (set! cnt (add1 cnt)))
-     (cddddr (alist-keys params)))
-    (set! mood i)))
 
 
 (define (iterate)
@@ -70,24 +48,13 @@
       (let* ((picked-ind
 	      (random  (sub1 (length avail-file-names))))
 	     (file-name
-	      (list-ref avail-file-names picked-ind))
-	     (it-count (alist-ref params '--iteration-count)))
-	(set! moodc (add1 (alist-ref params '--moodc)))
-	(alist-update! params
-		       '--moodc
-		       (lambda (k) moodc ))
-	(check-mood)
+	      (list-ref avail-file-names picked-ind)))
 	(set! used-file-names
 	  (append used-file-names `(,file-name)))
-	(printf "~A-~A" (list-ref folders mood) file-name)
-	(alist-update! params
-		       '--iteration-count
-		       (lambda (k) (add1 it-count) ))
+	(printf file-name)
 	(write-config-file))
-      (begin (clean-data)
-	     (set! avail-file-names '())
-	     (set! used-file-names '())
-	     (iterate))))
+      (begin 
+	(printf "-1"))))
 
 (define (write-config-file)
   (let ((fp (file-open dat-file
@@ -121,6 +88,8 @@
 (define (read-config-file)
   (let* ((fp (open-input-file dat-file))
 	 (lines (read-lines fp)))
+    (set! used-file-names '())
+    (set! avail-file-names '())
     (for-each
      (lambda (x)
        (let* ((is-param (memq #\= (string->list x)))

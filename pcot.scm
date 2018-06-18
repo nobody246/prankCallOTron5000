@@ -17,10 +17,6 @@
   (print "..")
   (exit))
 
-(define (clean-data)
-  (process-run
-   (string-append "rm -r " dat-file "  &> /dev/null")))
-
 
 (define (get-available-files)
   (let ((file-list (directory
